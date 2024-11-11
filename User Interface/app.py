@@ -2,10 +2,34 @@ import streamlit as st
 import sqlite3
 import os
 from PIL import Image
-from rembg import remove
 import json
 from unsloth import FastLanguageModel
 import torch
+from datetime import datetime
+import holidays
+import numpy as np
+from keras.models import load_model
+
+price_model = load_model("model.h5")
+
+holidays = holidays.Turkey()
+is_holiday = 1 if datetime.now().date() in holidays else 0
+
+
+hour = datetime.now().hour
+sin = np.sin(2 * np.pi * hour / 24)
+cos = np.cos(2 * np.pi * hour / 24)
+
+prediction = price_model.predict(np.array([[sin, cos, is_holiday]]))
+
+if prediction > 3000:
+    discount = 20
+elif prediction > 2500:
+    discount = 10
+elif prediction > 2000:
+    discount = 5
+else:
+    discount = 0
 
 
 os.makedirs("product_images", exist_ok=True)
@@ -81,6 +105,8 @@ if choice == "Sell Product":
             img = Image.open(img)
             image_path = f"product_images/{exp.replace(' ', '')}.jpg"
             img.save(image_path)
+
+            price = price - discount
 
             prompt = f"""
             You are extracting Food title and description from given text and rewriting the description and enhancing it when necessary.
