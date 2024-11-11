@@ -178,6 +178,8 @@ elif choice == "Search Product":
                     if product_image_path and os.path.exists(product_image_path):
                         img = Image.open(product_image_path)
                         st.image(img, caption=product_name)
+                    else:
+                        st.write("No image uploaded.")
             else:
                 st.error("No products found matching your search.")
             conn.close()
