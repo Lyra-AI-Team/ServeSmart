@@ -9,6 +9,72 @@ from datetime import datetime
 import holidays
 import numpy as np
 from keras.models import load_model
+from googletrans import Translator
+
+
+# Language Dictionary
+languages = {
+    "Türkçe": "tr", 
+    "Azərbaycan dili": "az",  
+    "Deutsch": "de",          
+    "English": "en",          
+    "Français": "fr",        
+    "Español": "es",         
+    "Italiano": "it",        
+    "Nederlands": "nl",      
+    "Português": "pt",                
+    "Русский": "ru",         
+    "中文": "zh",             
+    "日本語": "ja",           
+    "한국어": "ko",           
+    "عربي": "ar",          
+    "हिन्दी": "hi",          
+    "ภาษาไทย": "th",       
+    "Tiếng Việt": "vi",      
+    "فارسی": "fa",         
+    "Svenska": "sv",         
+    "Norsk": "no",           
+    "Dansk": "da",
+    "Čeština": "cs",
+    "Ελληνικά": "el",   
+    "Bosanski": "bs",        
+    "Hrvatski": "hr",       
+    "Shqip": "sq", 
+    "Slovenčina": "sk",
+    "Slovenščina": "sl",
+    "Türkmençe": "tk", 
+    "български" : "bg",
+    "Кыргызча": "ky",          
+    "Қазақша": "kk",           
+    "Монгол": "mn",
+    "Українська": "uk",
+    "Cymraeg": "cy",
+    "Tatarça": "tt",
+    "Kiswahili": "sw",
+    "Hausa": "ha",
+    "አማርኛ": "am",
+    "Èdè Yorùbá": "yo",
+    "isiZulu": "zu",
+    "chiShona": "sn",
+    "isiXhosa": "xh"
+}
+
+
+tr_list = ["Sell Product", "Search Product", "Buy Product", "Welcome! Sell Your Products and Help Prevent Waste", 
+           "Provide a short explanation of your product, and our AI will generate a title and description upon submission. You can also upload a product photo and optionally remove its background.",
+           "Please write a short explanation", "Photo of your product", "Price of your product", "Your IBAN to payment.", "Your Identity Number", "Submit Product",
+           "Valid identity number.", "Please enter a valid 11-digit identity number consisting of numbers only.", "Product submitted successfully.", "There is an error, please try again.", 
+           "Find a Product and Buy from Other Page", "Attention please: You will need product ID to buy.", "Search for a product by name", "Search", "No products found matching your search.", 
+           "Hello there :wave: Here you can buy a product.", "Find a Product from Other Page and Buy Here", "Attention please: You will need product ID to buy.", "ID of the product.", 
+           "Your Adress", "CVV number of your card: ", "Your card number: ", "Buy Product", "Valid identity number.", "Please enter a valid 11-digit identity number consisting of numbers only.", "Product purchased successfully."]
+tr_list_tr = []
+
+
+translator = Translator()
+
+def translate_texts(language):
+    return [translator.translate(text, dest=languages[language]).text for text in tr_list]
+
 
 price_model = load_model("model.h5")
 
@@ -82,32 +148,34 @@ FastLanguageModel.for_inference(model)
 
 with st.sidebar:
     st.title("Navigation")
-    choice = st.radio("", ["Sell Product", "Search Product", "Buy Product"])
+    language = st.selectbox("Select Language", list(languages.keys()))
+    tr_list_tr = translate_texts(language)
+    choice = st.radio("", [tr_list_tr[0], tr_list_tr[1], tr_list_tr[2]])
 
 if choice == "Sell Product":
-    st.title("Welcome :wave: Sell Your Products and Help Prevent Waste")
+    st.title(tr_list_tr[3])
     with st.form("add_product_form"):
-        st.write("Provide a short explanation of your product, and our AI will generate a title and description upon submission. You can also upload a product photo and optionally remove its background.")
+        st.write(tr_list_tr[4])
         
-        exp = st.text_area("Please write a short explanation")
-        img = st.camera_input("Photo of your product")
-        price = st.number_input("Price of your product", min_value=0.0)
-        iban = st.text_input("Your IBAN to payment.")
-        i_no = st.text_input("Your Identity Number", max_chars=11)
+        exp = st.text_area(tr_list_tr[5])
+        img = st.camera_input(tr_list_tr[6])
+        price = st.number_input(tr_list_tr[7], min_value=0.0)
+        iban = st.text_input(tr_list_tr[8])
+        i_no = st.text_input(tr_list_tr[9], max_chars=11)
 
-        submit_product_button = st.form_submit_button("Submit Product")
+        submit_product_button = st.form_submit_button(tr_list_tr[10])
         if i_no:
             if len(i_no) == 11 and i_no.isdigit():
-                st.success("Valid identity number.")
+                st.success(tr_list_tr[11])
             else:
-                st.error("Please enter a valid 11-digit identity number consisting of numbers only.")
+                st.error(tr_list_tr[12])
         if submit_product_button:
             img = Image.open(img)
             image_path = f"product_images/{exp.replace(' ', '')}.jpg"
             img.save(image_path)
 
             price = price - discount
-
+            exp = translator.translate(exp, dest="en").text
             prompt = f"""
             You are extracting Food title and description from given text and rewriting the description and enhancing it when necessary.
             Always give response in the user's input language.
@@ -136,9 +204,10 @@ if choice == "Sell Product":
             json_end = answer.find("}") + 1
             json_response = answer[json_start:json_end].strip()
             json_data = json.loads(json_response)
-            
             title = json_data["title"]
             description = json_data["description"]
+            title = translator.translate(title, dest=languages[language]).text
+            description = translator.translate(description, dest=languages[language]).text
             st.write(f"Title: ", title)
             st.write(f"Description:", description)
 
@@ -150,16 +219,16 @@ if choice == "Sell Product":
                            (seller_id, title, description, price, image_path))
             conn.commit()
             conn.close()
-            st.success("Product submitted successfully.")
+            st.success(tr_list_tr[13])
         else:
-            st.warning("There is an error, please try again.")
+            st.warning(tr_list_tr[14])
 
 elif choice == "Search Product":
     with st.form("customer_searching_form"):
-        st.title("Find a Product and Buy from Other Page")
-        st.write("Attention please: You will need product ID to buy.")
-        search_query = st.text_input("Search for a product by name")
-        search_button = st.form_submit_button("Search")
+        st.title(tr_list_tr[15])
+        st.write(tr_list_tr[16])
+        search_query = st.text_input(tr_list_tr[17])
+        search_button = st.form_submit_button(tr_list_tr[18])
 
         if search_button:
             conn = sqlite3.connect("database.db")
@@ -178,28 +247,26 @@ elif choice == "Search Product":
                     if product_image_path and os.path.exists(product_image_path):
                         img = Image.open(product_image_path)
                         st.image(img, caption=product_name)
-                    else:
-                        st.write("No image uploaded.")
             else:
-                st.error("No products found matching your search.")
+                st.error(tr_list_tr[19])
             conn.close()
 
 elif choice == "Buy Product":
-    st.title("Hello there :wave: Here you can buy a product.")
+    st.title(tr_list_tr[20])
     with st.form("customer_buying_form"):
-        st.title("Find a Product from Other Page and Buy Here")
-        st.write("Attention please: You will need product ID to buy.")
-        p_id=st.number_input("ID of the product.")
-        adress = st.text_input("Your adress")
-        p_i_no = st.text_input("Your identity number", max_chars=11)
-        CVV = st.text_input("CVV number of your card: ", max_chars=3)
-        card_no = st.text_input("Your card number: ")
-        buy_product_button = st.form_submit_button("Buy Product")
+        st.title(tr_list_tr[21])
+        st.write(tr_list_tr[22])
+        p_id=st.number_input(tr_list_tr[23])
+        adress = st.text_input(tr_list_tr[24])
+        p_i_no = st.text_input(tr_list_tr[9], max_chars=11)
+        CVV = st.text_input(tr_list_tr[25], max_chars=3)
+        card_no = st.text_input(tr_list_tr[26])
+        buy_product_button = st.form_submit_button(tr_list_tr[27])
         if p_i_no:
             if len(p_i_no) == 11 and p_i_no.isdigit():
-                st.success("Valid identity number.")
+                st.success(tr_list_tr[28])
             else:
-                st.error("Please enter a valid 11-digit identity number consisting of numbers only.")
+                st.error(tr_list_tr[29])
         if buy_product_button:
 
             try:
@@ -218,7 +285,7 @@ elif choice == "Buy Product":
                 
                 conn.commit()
                 conn.close()
-                st.success("Product purchased successfully.")
+                st.success(tr_list_tr[30])
                 
             except sqlite3.Error as e:
                 st.error(f"An error occurred: {e}")
