@@ -11,6 +11,8 @@ from keras.models import load_model
 import google.generativeai as genai
 from dotenv import load_dotenv
 import warnings
+import pandas as pd
+import plotly.express as px
 warnings.filterwarnings("ignore")
 
 load_dotenv()
@@ -160,19 +162,44 @@ elif choice == "Search Product":
             products = cursor.fetchall()
 
             if products:
-                for product in products:
-                    product_id, seller_id, product_name, description, purchase_count, product_image_path, price = product
-                    st.write(f"**Product ID**:", {product_id})
-                    st.write(f"**Product Name**: {product_name}")
-                    st.write(f"**Description**: {description}")
-                    st.write(f"**Price**: ${price}")
-                    st.write(f"**Purchased**: {purchase_count} times")
-                    if product_image_path and os.path.exists(product_image_path):
-                        img = Image.open(product_image_path)
-                        st.image(img, caption=product_name)
-            else:
-                st.error("No products found matching your search.")
-            conn.close()
+              product_names = []
+              purchase_counts = []
+              vendor_ids = []
+
+              for product in products:
+                product_id, seller_id, product_name, description, purchase_count, product_image_path, price = product
+                st.write(f"**Product ID**:", {product_id})
+                st.write(f"**Product Name**: {product_name}")
+                st.write(f"**Description**: {description}")
+                st.write(f"**Price**: ${price}")
+                st.write(f"**Purchased**: {purchase_count} times")
+        
+                if product_image_path and os.path.exists(product_image_path):
+                  img = Image.open(product_image_path)
+                  st.image(img, caption=product_name)
+        
+                product_names.append(product_name)
+                purchase_counts.append(purchase_count)
+                vendor_ids.append(seller_id)
+
+              df = pd.DataFrame({
+        "Product Name": product_names,
+        "Purchase Count": purchase_counts,
+        "Vendor": vendor_ids
+    })
+
+              st.subheader("Sales Summary")
+              st.write(f"Total Sales Quantity: {df['Purchase Count'].sum()}")
+              st.write(f"Top-Selling Product: {df.loc[df['Purchase Count'].idxmax(), 'Product Name']}")
+              top_selling_vendor = df.groupby("Vendor")["Purchase Count"].sum().idxmax()
+              st.write(f"Top-Selling Vendor: {top_selling_vendor}")
+
+              fig = px.bar(df, x="Product Name", y="Purchase Count", title="Purchase Counts for Searched Products")
+              st.plotly_chart(fig)
+
+        else:
+          st.error("No products found matching your search.")
+          conn.close()
 
 elif choice == "Buy Product":
     st.title("Hello there :wave: Here you can buy a product.")
