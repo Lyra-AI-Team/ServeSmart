@@ -9,15 +9,15 @@ import holidays
 import numpy as np
 from keras.models import load_model
 import google.generativeai as genai
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import warnings
 import pandas as pd
 import plotly.express as px
 warnings.filterwarnings("ignore")
 
-load_dotenv()
-api_key = os.getenv("API_KEY")
-genai.configure(api_key=api_key)
+#load_dotenv()
+#api_key = os.getenv("API_KEY")
+genai.configure(api_key="AIzaSyArNEe3eqSkKXztXhjXR3uIz9eZC-o2VqM")
 
 price_model = load_model("model.h5")
 
@@ -76,15 +76,19 @@ CREATE TABLE IF NOT EXISTS products (
 
 conn.commit()
 conn.close()
-
+st.set_page_config(
+    page_title="ServeSmart",
+    layout="centered",
+    initial_sidebar_state="expanded"
+)
 with st.sidebar:
     st.title("Navigation")
     choice = st.radio("", ["Sell Product", "Search Product", "Buy Product"])
 
 if choice == "Sell Product":
-    st.title("Welcome! Sell Your Products and Help Prevent Waste")
+    st.title("Welcome to ServeSmart :wave: Sell Your Products and Help Prevent Waste")
     with st.form("add_product_form"):
-        st.write("Provide a short explanation of your product, and our AI will generate a title and description upon submission. You can also upload a product photo and optionally remove its background.")
+        st.write("Provide a short explanation of your product, and our AI will generate a title and description upon submission. You can also upload a product photo.")
         
         exp = st.text_area("Please write a short explanation")
         img = st.camera_input("Photo of your product")
