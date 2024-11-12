@@ -8,7 +8,6 @@ from datetime import datetime
 import holidays
 import numpy as np
 from keras.models import load_model
-from googletrans import Translator
 import google.generativeai as genai
 from dotenv import load_dotenv
 import warnings
@@ -17,67 +16,6 @@ warnings.filterwarnings("ignore")
 load_dotenv()
 api_key = os.getenv("API_KEY")
 genai.configure(api_key=api_key)
-
-# Language Dictionary
-languages = {
-    "Türkçe": "tr", 
-    "Azərbaycan dili": "az",  
-    "Deutsch": "de",          
-    "English": "en",          
-    "Français": "fr",        
-    "Español": "es",         
-    "Italiano": "it",        
-    "Nederlands": "nl",      
-    "Português": "pt",                
-    "Русский": "ru",         
-    "中文": "zh",             
-    "日本語": "ja",           
-    "한국어": "ko",           
-    "عربي": "ar",          
-    "हिन्दी": "hi",          
-    "ภาษาไทย": "th",       
-    "Tiếng Việt": "vi",      
-    "فارسی": "fa",         
-    "Svenska": "sv",         
-    "Norsk": "no",           
-    "Dansk": "da",
-    "Čeština": "cs",
-    "Ελληνικά": "el",   
-    "Bosanski": "bs",        
-    "Hrvatski": "hr",       
-    "Shqip": "sq", 
-    "Slovenčina": "sk",
-    "Slovenščina": "sl",
-    "Türkmençe": "tk", 
-    "български" : "bg",
-    "Кыргызча": "ky",          
-    "Қазақша": "kk",           
-    "Монгол": "mn",
-    "Українська": "uk",
-    "Cymraeg": "cy",
-    "Tatarça": "tt",
-    "Kiswahili": "sw",
-    "Hausa": "ha",
-    "አማርኛ": "am",
-    "Èdè Yorùbá": "yo",
-    "isiZulu": "zu",
-    "chiShona": "sn",
-    "isiXhosa": "xh"
-}
-
-tr_list = ["Sell Product", "Search Product", "Buy Product", "Welcome! Sell Your Products and Help Prevent Waste", 
-           "Provide a short explanation of your product, and our AI will generate a title and description upon submission. You can also upload a product photo and optionally remove its background.",
-           "Please write a short explanation", "Photo of your product", "Price of your product", "Your IBAN to payment.", "Your Identity Number", "Submit Product",
-           "Valid identity number.", "Please enter a valid 11-digit identity number consisting of numbers only.", "Product submitted successfully.", "There is an error, please try again.", 
-           "Find a Product and Buy from Other Page", "Attention please: You will need product ID to buy.", "Search for a product by name", "Search", "No products found matching your search.", 
-           "Hello there :wave: Here you can buy a product.", "Find a Product from Other Page and Buy Here", "Attention please: You will need product ID to buy.", "ID of the product.", 
-           "Your Adress", "CVV number of your card: ", "Your card number: ", "Buy Product", "Valid identity number.", "Please enter a valid 11-digit identity number consisting of numbers only.", "Product purchased successfully."]
-tr_list_tr = []
-
-translator = Translator()
-
-def translate_texts(language):
-    return [translator.translate(text, dest=languages[language]).text for text in tr_list]
 
 price_model = load_model("model.h5")
 
@@ -106,17 +44,17 @@ cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS customers (
     customer_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    identity_no TEXT NOT NULL UNIQUE CHECK(length(identity_no) = 11 AND identity_no GLOB '***********'),
+    identity_no TEXT NOT NULL CHECK(length(identity_no) = 11 AND identity_no GLOB '***********'),
     CVV TEXT NOT NULL,
     card_no TEXT NOT NULL,
-    adresss TEXT NOT NULL
+    adress TEXT NOT NULL
 );
 """)
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS sellers (
     seller_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    identity_no TEXT NOT NULL UNIQUE CHECK(length(identity_no) = 11 AND identity_no GLOB '***********'),
+    identity_no TEXT NOT NULL CHECK(length(identity_no) = 11 AND identity_no GLOB '***********'),
     IBAN TEXT NOT NULL
 );
 """)
@@ -139,34 +77,31 @@ conn.close()
 
 with st.sidebar:
     st.title("Navigation")
-    language = st.selectbox("Select Language", list(languages.keys()))
-    tr_list_tr = translate_texts(language)
-    choice = st.radio("", [tr_list_tr[0], tr_list_tr[1], tr_list_tr[2]])
+    choice = st.radio("", ["Sell Product", "Search Product", "Buy Product"])
 
 if choice == "Sell Product":
-    st.title(tr_list_tr[3])
+    st.title("Welcome! Sell Your Products and Help Prevent Waste")
     with st.form("add_product_form"):
-        st.write(tr_list_tr[4])
+        st.write("Provide a short explanation of your product, and our AI will generate a title and description upon submission. You can also upload a product photo and optionally remove its background.")
         
-        exp = st.text_area(tr_list_tr[5])
-        img = st.camera_input(tr_list_tr[6])
-        price = st.number_input(tr_list_tr[7], min_value=0.0)
-        iban = st.text_input(tr_list_tr[8])
-        i_no = st.text_input(tr_list_tr[9], max_chars=11)
+        exp = st.text_area("Please write a short explanation")
+        img = st.camera_input("Photo of your product")
+        price = st.number_input("Price of your product", min_value=0.0)
+        iban = st.text_input("Your IBAN to payment.")
+        i_no = st.text_input("Your Identity Number", max_chars=11)
 
-        submit_product_button = st.form_submit_button(tr_list_tr[10])
+        submit_product_button = st.form_submit_button("Submit Product")
         if i_no:
             if len(i_no) == 11 and i_no.isdigit():
-                st.success(tr_list_tr[11])
+                st.success("Valid identity number.")
             else:
-                st.error(tr_list_tr[12])
+                st.error("Please enter a valid 11-digit identity number consisting of numbers only.")
         if submit_product_button:
             img = Image.open(img)
             image_path = f"product_images/{exp.replace(' ', '')}.jpg"
             img.save(image_path)
 
             price = price - discount
-            exp = translator.translate(exp, dest="en").text
             model = genai.GenerativeModel("gemini-1.5-flash")
             
             prompt = f"""
@@ -195,8 +130,6 @@ if choice == "Sell Product":
             title = json_response["title"]
             description = json_response["description"]       
 
-            title = translator.translate(title, dest=languages[language]).text
-            description = translator.translate(description, dest=languages[language]).text
             st.write(f"Title: ", title)
             st.write(f"Description:", description)
 
@@ -208,16 +141,16 @@ if choice == "Sell Product":
                            (seller_id, title, description, price, image_path))
             conn.commit()
             conn.close()
-            st.success(tr_list_tr[13])
+            st.success("Product submitted successfully.")
         else:
-            st.warning(tr_list_tr[14])
+            st.warning("There is an error, please try again.")
 
 elif choice == "Search Product":
     with st.form("customer_searching_form"):
-        st.title(tr_list_tr[15])
-        st.write(tr_list_tr[16])
-        search_query = st.text_input(tr_list_tr[17])
-        search_button = st.form_submit_button(tr_list_tr[18])
+        st.title("Find a Product and Buy from Other Page")
+        st.write("Attention please: You will need product ID to buy.")
+        search_query = st.text_input("Search for a product by name")
+        search_button = st.form_submit_button("Search")
 
         if search_button:
             conn = sqlite3.connect("database.db")
@@ -237,46 +170,43 @@ elif choice == "Search Product":
                         img = Image.open(product_image_path)
                         st.image(img, caption=product_name)
             else:
-                st.error(tr_list_tr[19])
+                st.error("No products found matching your search.")
             conn.close()
 
 elif choice == "Buy Product":
-    st.title(tr_list_tr[20])
+    st.title("Hello there :wave: Here you can buy a product.")
     with st.form("customer_buying_form"):
-        st.title(tr_list_tr[21])
-        st.write(tr_list_tr[22])
-        p_id=st.number_input(tr_list_tr[23])
-        adress = st.text_input(tr_list_tr[24])
-        p_i_no = st.text_input(tr_list_tr[9], max_chars=11)
-        CVV = st.text_input(tr_list_tr[25], max_chars=3)
-        card_no = st.text_input(tr_list_tr[26])
-        buy_product_button = st.form_submit_button(tr_list_tr[27])
+        st.title("Find a Product from Other Page and Buy Here")
+        st.write("Attention please: You will need product ID to buy.")
+        p_id=st.number_input("ID of the product.")
+        adress = st.text_input("Your Adress")
+        p_i_no = st.text_input("Your Identity Number", max_chars=11)
+        CVV = st.text_input("CVV number of your card: ", max_chars=3)
+        card_no = st.text_input("Your card number: ")
+        buy_product_button = st.form_submit_button("Buy Product")
         if p_i_no:
             if len(p_i_no) == 11 and p_i_no.isdigit():
-                st.success(tr_list_tr[28])
+                st.success("Valid identity number.")
             else:
-                st.error(tr_list_tr[29])
+                st.error("Please enter a valid 11-digit identity number consisting of numbers only.")
         if buy_product_button:
 
             try:
                 conn = sqlite3.connect("database.db")
                 cursor = conn.cursor()
-                
-                cursor.execute(
-                    "INSERT INTO customers (identity_no, adress,CVV, card_no) VALUES (?, ?, ?, ?)",
-                    (p_i_no, adress, CVV, card_no)
-                )
-                
-                cursor.execute(
-                    "UPDATE products SET purchase_count = purchase_count + 1 WHERE product_id = ?",
-                    (p_id,)
-                )
-                
-                conn.commit()
-                conn.close()
-                st.success(tr_list_tr[30])
-                
-            except sqlite3.Error as e:
-                st.error(f"An error occurred: {e}")
+                cursor.execute("SELECT * FROM products WHERE product_id=?", (p_id,))
+                result = cursor.fetchone()
+
+                if result:
+                    cursor.execute("INSERT INTO customers (identity_no, CVV, card_no, adresss) VALUES (?, ?, ?, ?)", (p_i_no, CVV, card_no, adress))
+                    cursor.execute("UPDATE products SET purchase_count=purchase_count+1 WHERE product_id=?", (p_id,))
+                    conn.commit()
+                    conn.close()
+                    st.success("Product purchased successfully.")
+                else:
+                    st.warning("Product ID is wrong, please try again.")
+
+            except:
                 conn.rollback()
                 conn.close()
+                st.error("There is an error, please try again.")
