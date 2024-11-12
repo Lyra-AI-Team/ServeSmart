@@ -1,0 +1,9 @@
+streamlit
+sqlite3
+torch
+pillow
+holidays
+keras
+google
+python-dotenv
+plotly
