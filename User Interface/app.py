@@ -87,6 +87,7 @@ if choice == "Sell Product":
         exp = st.text_area("Please write a short explanation")
         img = st.camera_input("Photo of your product")
         price = st.number_input("Price of your product", min_value=0.0)
+        st.write("Attention please! Price may change on our AI model.")
         iban = st.text_input("Your IBAN to payment.")
         i_no = st.text_input("Your Identity Number", max_chars=11)
 
