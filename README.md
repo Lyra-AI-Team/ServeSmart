@@ -81,19 +81,22 @@ You can see the example.
 
 This project makes use of the following models:
 
-1. **ahmeterdempmk/FoodLlaMa-LoRA-Based**:
+1. **Gemini 1.5 Flash**:
+   - **Source:** [Google](https://gemini.google.com/?hl=tr)
+
+2. **ahmeterdempmk/FoodLlaMa-LoRA-Based**:
    - **Source:** [Hugging Face](https://huggingface.co/ahmeterdempmk/Llama-3.1-8B-Fast-Food-Based-Tuned)
    - **License:** Apache 2.0
 
-2. **ahmeterdempmk/Gemma2-2b-E-Commerce-Tuned**:
+3. **ahmeterdempmk/Gemma2-2b-E-Commerce-Tuned**:
    - **Source:** [Hugging Face](https://huggingface.co/ahmeterdempmk/Gemma2-2b-E-Commerce-Tuned)
    - **License:** Apache 2.0
 
-3. **ahmeterdempmk/Llama-3.1-8B-Fast-Food-Based-Tuned**:
+4. **ahmeterdempmk/Llama-3.1-8B-Fast-Food-Based-Tuned**:
    - **Source:** [Hugging Face](https://huggingface.co/ahmeterdempmk/Llama-3.1-8B-Fast-Food-Based-Tuned)
    - **License:** Apache 2.0
      
-4. **Emir Kaan Özdemir - LSTM Based Time Series Model**:
+5. **Emir Kaan Özdemir - LSTM Based Time Series Model**:
    - **Source:** [GitHub](https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/User%20Interface/model.h5)
    - **License:** Apache 2.0
 
