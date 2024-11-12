@@ -79,7 +79,8 @@ conn.close()
 st.set_page_config(
     page_title="ServeSmart",
     layout="centered",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    page_icon="🍽️"
 )
 with st.sidebar:
     st.title("Navigation")
