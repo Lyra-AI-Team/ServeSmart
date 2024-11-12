@@ -9,15 +9,15 @@ import holidays
 import numpy as np
 from keras.models import load_model
 import google.generativeai as genai
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 import warnings
 import pandas as pd
 import plotly.express as px
 warnings.filterwarnings("ignore")
 
-#load_dotenv()
-#api_key = os.getenv("API_KEY")
-genai.configure(api_key="AIzaSyArNEe3eqSkKXztXhjXR3uIz9eZC-o2VqM")
+load_dotenv()
+api_key = os.getenv("API_KEY")
+genai.configure(api_key=api_key)
 
 price_model = load_model("model.h5")
 
