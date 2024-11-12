@@ -3,14 +3,20 @@ import sqlite3
 import os
 from PIL import Image
 import json
-from unsloth import FastLanguageModel
 import torch
 from datetime import datetime
 import holidays
 import numpy as np
 from keras.models import load_model
 from googletrans import Translator
+import google.generativeai as genai
+from dotenv import load_dotenv
+import warnings
+warnings.filterwarnings("ignore")
 
+load_dotenv()
+api_key = os.getenv("API_KEY")
+genai.configure(api_key=api_key)
 
 # Language Dictionary
 languages = {
@@ -59,7 +65,6 @@ languages = {
     "isiXhosa": "xh"
 }
 
-
 tr_list = ["Sell Product", "Search Product", "Buy Product", "Welcome! Sell Your Products and Help Prevent Waste", 
            "Provide a short explanation of your product, and our AI will generate a title and description upon submission. You can also upload a product photo and optionally remove its background.",
            "Please write a short explanation", "Photo of your product", "Price of your product", "Your IBAN to payment.", "Your Identity Number", "Submit Product",
@@ -69,18 +74,15 @@ tr_list = ["Sell Product", "Search Product", "Buy Product", "Welcome! Sell Your 
            "Your Adress", "CVV number of your card: ", "Your card number: ", "Buy Product", "Valid identity number.", "Please enter a valid 11-digit identity number consisting of numbers only.", "Product purchased successfully."]
 tr_list_tr = []
 
-
 translator = Translator()
 
 def translate_texts(language):
     return [translator.translate(text, dest=languages[language]).text for text in tr_list]
 
-
 price_model = load_model("model.h5")
 
 holidays = holidays.Turkey()
 is_holiday = 1 if datetime.now().date() in holidays else 0
-
 
 hour = datetime.now().hour
 sin = np.sin(2 * np.pi * hour / 24)
@@ -97,9 +99,7 @@ elif prediction > 2000:
 else:
     discount = 0
 
-
 os.makedirs("product_images", exist_ok=True)
-
 
 conn = sqlite3.connect("database.db")
 cursor = conn.cursor()
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS customers (
     identity_no TEXT NOT NULL UNIQUE CHECK(length(identity_no) = 11 AND identity_no GLOB '***********'),
     CVV TEXT NOT NULL,
     card_no TEXT NOT NULL,
-    adress TEXT NOT NULL
+    adresss TEXT NOT NULL
 );
 """)
 
@@ -136,15 +136,6 @@ CREATE TABLE IF NOT EXISTS products (
 
 conn.commit()
 conn.close()
-
-
-model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="ahmeterdempmk/FoodLlaMa-LoRA-Based",
-    max_seq_length=2048,
-    dtype=None,
-    load_in_4bit=True
-)
-FastLanguageModel.for_inference(model)
 
 with st.sidebar:
     st.title("Navigation")
@@ -176,12 +167,13 @@ if choice == "Sell Product":
 
             price = price - discount
             exp = translator.translate(exp, dest="en").text
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            
             prompt = f"""
             You are extracting Food title and description from given text and rewriting the description and enhancing it when necessary.
             Always give response in the user's input language.
             Always answer in the given json format. Do not use any other keywords. Do not make up anything.
             The description part must contain at least 5 sentences for each.
-
             Json Format:
             {{
             "title": "<title of the Food>",
@@ -189,23 +181,20 @@ if choice == "Sell Product":
             }}
             Examples:
             Food Information: Rosehip Marmalade, keep it cold
-            Answer: {{"title": "Rosehip Marmalade", "description": "You should store this delicious rose marmalade in a cold place..."}}
-            
+            Answer: {{"title": "Rosehip Marmalade", "description": "You should store this delicious rose marmalade in a cold place. It is an excellent flavor used in meals and desserts. Sold in grocery stores. It is in the form of 24 gr / 1 package. You can use this wonderful flavor in your meals and desserts!"}}
+            Food Information: Blackberry jam spoils in the heat
+            Answer: {{"title": "Blackberry Jam", "description": "Please store in a cold environment. It is recommended to be consumed for breakfast. It is very sweet. It is a traditional flavor and can be found in markets etc. You can also use it in your meals other than breakfast."}}
+            Now answer this:
             Food Information: {exp}
-            """
-            
-            inputs = tokenizer([prompt], return_tensors="pt").to("cuda")
-            outputs = model.generate(**inputs, max_new_tokens=128)
-            response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            """  
 
-            answer_start = response.find("Now answer this:") + len("Now answer this:")
-            answer = response[answer_start:].strip()
-            json_start = answer.find("{")
-            json_end = answer.find("}") + 1
-            json_response = answer[json_start:json_end].strip()
-            json_data = json.loads(json_response)
-            title = json_data["title"]
-            description = json_data["description"]
+            response = model.generate_content(prompt)
+
+            json_response = json.loads(response.text)
+
+            title = json_response["title"]
+            description = json_response["description"]       
+
             title = translator.translate(title, dest=languages[language]).text
             description = translator.translate(description, dest=languages[language]).text
             st.write(f"Title: ", title)
