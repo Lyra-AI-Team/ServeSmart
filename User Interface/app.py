@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS customers (
     identity_no TEXT NOT NULL UNIQUE CHECK(length(identity_no) = 11 AND identity_no GLOB '***********'),
     CVV TEXT NOT NULL,
     card_no TEXT NOT NULL,
-    adresss TEXT NOT NULL
+    adress TEXT NOT NULL
 );
 """)
 
