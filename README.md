@@ -21,8 +21,21 @@ streamlit run app.py
 
 # Overview of Code Functionality
 
+## Create Account to Sell
+Our Streamlit application contains five tabs. The first tab is for creating accounts (for sellers). The instructions to sign up to system:
+1. Enter username.
+2. Enter password.
+3. Enter the IBAN that you will get the payments.
+4. Enter your ID no (for security).
+5. Enter your business adress (for security).
+
+### User Interface:
+<div align="center">
+<img src="https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/Assets/create_account.PNG" width="1000" />
+</div>
+
 ## Sell Product
-Our Streamlit application contains three tabs. The first tab is for product selling (adding). The instructions to add product:
+The first second is for product selling (adding). The instructions to add product:
 1. Enter informations about your meal (AI will improve it).
 2. Take a photo of your meal.
 3. Enter the price of your meal.
@@ -35,7 +48,7 @@ Our Streamlit application contains three tabs. The first tab is for product sell
 </div>
 
 ## Search Product
-The second tab provides a search product feature. Here’s how it works:
+The third tab provides a search product feature. Here’s how it works:
 1. Enter the product name you want to buy and search it.
 2. Don't forget learn the ID of the meal you will buy.
 
@@ -53,10 +66,28 @@ After decide the meal that you will buy, you're going to buy it from buy product
 4. Enter the CVV of your card.
 5. Enter your card number.
 
-### Result:
+### User Interface:
 
 <div align="center">
 <img src="https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/Assets/buy_product.PNG" width="1000" />
+</div>
+
+## See Your Products
+As a seller, you can see your products and analysis from this page. Here what should you do:
+1. Enter your username.
+2. Enter your password.
+3. After login, you can see your product and analysis that made for you.
+
+### User Interface:
+
+https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/Assets/see_products_login.PNG
+
+<div align="center">
+
+ | Login | Analysis |
+|---------|---------|
+| <img src="https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/Assets/see_products_login.PNG" width="300" /> | <img src="https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/Assets/see_products_analysis.PNG" width="300" /> |
+
 </div>
 
 ## Text Generation
@@ -81,22 +112,19 @@ You can see the example.
 
 This project makes use of the following models:
 
-1. **Gemini 1.5 Flash**:
-   - **Source:** [Google](https://gemini.google.com/?hl=tr)
-
-2. **ahmeterdempmk/FoodLlaMa-LoRA-Based**:
+1. **ahmeterdempmk/FoodLlaMa-LoRA-Based**:
    - **Source:** [Hugging Face](https://huggingface.co/ahmeterdempmk/Llama-3.1-8B-Fast-Food-Based-Tuned)
    - **License:** Apache 2.0
 
-3. **ahmeterdempmk/Gemma2-2b-E-Commerce-Tuned**:
+2. **ahmeterdempmk/Gemma2-2b-E-Commerce-Tuned**:
    - **Source:** [Hugging Face](https://huggingface.co/ahmeterdempmk/Gemma2-2b-E-Commerce-Tuned)
    - **License:** Apache 2.0
 
-4. **ahmeterdempmk/Llama-3.1-8B-Fast-Food-Based-Tuned**:
+3. **ahmeterdempmk/Llama-3.1-8B-Fast-Food-Based-Tuned**:
    - **Source:** [Hugging Face](https://huggingface.co/ahmeterdempmk/Llama-3.1-8B-Fast-Food-Based-Tuned)
    - **License:** Apache 2.0
      
-5. **Emir Kaan Özdemir - LSTM Based Time Series Model**:
+4. **Emir Kaan Özdemir - LSTM Based Time Series Model**:
    - **Source:** [GitHub](https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/User%20Interface/model.h5)
    - **License:** Apache 2.0
 
