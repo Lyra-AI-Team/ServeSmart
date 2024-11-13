@@ -92,7 +92,7 @@ st.set_page_config(
 )
 with st.sidebar:
     st.title("Navigation")
-    choice = st.radio("Menu", ["Create Account to Sell", "Sell Product", "Search Product", "Buy Product", "See Your Products"])
+    choice = st.radio("Menu", ["Create Account to Sell", "Sell Product", "Search Product", "Buy Product", "See Your Products or Delete Your Products"])
 if choice == "Create Account to Sell":
     st.title("Welcome to ServeSmart :wave: Create an Account and Help Prevent Waste")
     conn = sqlite3.connect("database.db")
@@ -243,7 +243,7 @@ elif choice == "Buy Product":
     with st.form("customer_buying_form"):
         st.title("Find a Product from Other Page and Buy Here")
         st.write("Attention please: You will need product ID to buy.")
-        p_id=st.number_input("ID of the product.")
+        p_id=st.number_input("ID of the product.", min_value=1, step=1)
         adress = st.text_input("Your Adress")
         p_i_no = st.text_input("Your Identity Number", max_chars=11)
         CVV_n = st.text_input("CVV number of your card: ", max_chars=3)
@@ -277,7 +277,7 @@ elif choice == "Buy Product":
                 conn.close()
                 st.error("There is an error, please try again.")
 
-elif choice == "See Your Products":
+elif choice == "See Your Products or Delete Your Products":
     with st.form("see_your_products"):
         sy_username = st.text_input("Your username: ")
         sy_password = st.text_input("Your password: ", type="password")
@@ -297,10 +297,9 @@ elif choice == "See Your Products":
                     WHERE p.seller_id = ?
                 """
                 product_data = pd.read_sql_query(query, conn, params=(seller_id,))
-                conn.close()
                 st.write("Your Products and Sales Summary:")
                 st.dataframe(product_data)
-
+                conn.close()
                 fig, ax = plt.subplots()
                 ax.bar(product_data['product_name'], product_data['purchase_count'], color='skyblue')
                 ax.set_xlabel('Product Name')
@@ -312,6 +311,21 @@ elif choice == "See Your Products":
                 total_revenue = (product_data['price'] * product_data['purchase_count']).sum()
                 st.write(f"Total Products Sold: {total_sales}")
                 st.write(f"Total Revenue: ${total_revenue:.2f}")
-
             else:
                 st.warning("Username and password do not match. Please try again.")
+    with st.form("delete_product"):
+      st.write("Delete product")
+      conn = sqlite3.connect("database.db")
+      cursor = conn.cursor()
+      p_id = st.number_input("Your product ID: ", min_value=1, step=1)
+      delete_product = st.form_submit_button("Delete")
+      if delete_product:
+          try:
+              cursor.execute("DELETE FROM products WHERE product_id = ?", (p_id,))
+              conn.commit()
+              st.success(f"{p_id} deleted.")
+          except Exception as e:
+              st.error(f"Error: {e}")
+          finally:
+              conn.close()
+            
