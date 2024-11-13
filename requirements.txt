@@ -1,9 +1,12 @@
 streamlit
 sqlite3
+Pillow
 torch
-pillow
-holidays
-keras
-google
+numpy
+tensorflow
+google-generativeai
 python-dotenv
+pandas
 plotly
+matplotlib
+holidays
