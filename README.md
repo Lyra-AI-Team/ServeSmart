@@ -80,8 +80,6 @@ As a seller, you can see your products and analysis from this page. Here what sh
 
 ### User Interface:
 
-https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/Assets/see_products_login.PNG
-
 <div align="center">
 
  | Login | Analysis |
