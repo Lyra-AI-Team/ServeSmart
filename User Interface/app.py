@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import warnings
 import pandas as pd
 import plotly.express as px
+import matplotlib.pyplot as plt
 warnings.filterwarnings("ignore")
 
 load_dotenv()
@@ -46,20 +47,27 @@ cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS customers (
     customer_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    identity_no TEXT NOT NULL CHECK(length(identity_no) = 11 AND identity_no GLOB '***********'),
+    identity_no TEXT NOT NULL CHECK(length(identity_no) = 11 AND identity_no GLOB '[0-9]*'),
     CVV TEXT NOT NULL,
     card_no TEXT NOT NULL,
-    adress TEXT NOT NULL
+    address TEXT NOT NULL,
+    e_mail TEXT NOT NULL
 );
 """)
+
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS sellers (
     seller_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    identity_no TEXT NOT NULL CHECK(length(identity_no) = 11 AND identity_no GLOB '***********'),
-    IBAN TEXT NOT NULL
+    user_name TEXT NOT NULL UNIQUE,            
+    identity_no TEXT NOT NULL UNIQUE CHECK(length(identity_no) = 11 AND identity_no GLOB '[0-9]*'),
+    IBAN TEXT NOT NULL,
+    business_address TEXT NOT NULL,
+    e_mail TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL
 );
 """)
+
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS products (
@@ -84,75 +92,99 @@ st.set_page_config(
 )
 with st.sidebar:
     st.title("Navigation")
-    choice = st.radio("", ["Sell Product", "Search Product", "Buy Product"])
-
-if choice == "Sell Product":
+    choice = st.radio("Menu", ["Create Account to Sell", "Sell Product", "Search Product", "Buy Product", "See Your Products"])
+if choice == "Create Account to Sell":
+    st.title("Welcome to ServeSmart :wave: Create an Account and Help Prevent Waste")
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    with st.form("create_an_account"):
+        s_username = st.text_input("Username: ", max_chars=20)
+        s_password = st.text_input("Password: ", max_chars=20, type="password")
+        iban=st.text_input("Your IBAN to payement: ")
+        s_i_no = st.text_input("Your identity number: ", max_chars=11)
+        s_e_mail = st.text_input("Your E-Mail address: ")
+        business_address = st.text_input("Your business address")
+        create_account = st.form_submit_button("Create an Account")
+        if create_account:
+            if s_i_no and len(s_i_no) == 11 and s_i_no.isdigit():
+                try:
+                    cursor.execute("""
+                        INSERT INTO sellers (user_name, identity_no, IBAN, business_address, e_mail, password)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    """, (s_username, s_i_no, iban, business_address, s_e_mail, s_password))
+                    
+                    conn.commit() 
+                    st.success("Account created successfully!")
+                    
+                except sqlite3.IntegrityError:
+                    st.error("An account with this identity number or email already exists.")
+                
+            else:
+                st.error("Please enter a valid 11-digit identity number consisting of numbers only.")
+        
+elif choice == "Sell Product":
     st.title("Welcome to ServeSmart :wave: Sell Your Products and Help Prevent Waste")
     with st.form("add_product_form"):
         st.write("Provide a short explanation of your product, and our AI will generate a title and description upon submission. You can also upload a product photo.")
-        
+    
+        username = st.text_input("Your username: ")
+        password = st.text_input("Your Password: ", type="password")
         exp = st.text_area("Please write a short explanation")
         img = st.camera_input("Photo of your product")
         price = st.number_input("Price of your product", min_value=0.0)
         st.write("Attention please! Price may change on our AI model.")
-        iban = st.text_input("Your IBAN to payment.")
-        i_no = st.text_input("Your Identity Number", max_chars=11)
-
         submit_product_button = st.form_submit_button("Submit Product")
-        if i_no:
-            if len(i_no) == 11 and i_no.isdigit():
-                st.success("Valid identity number.")
-            else:
-                st.error("Please enter a valid 11-digit identity number consisting of numbers only.")
-        if submit_product_button:
-            img = Image.open(img)
-            image_path = f"product_images/{exp.replace(' ', '')}.jpg"
-            img.save(image_path)
 
-            price = price - discount
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            
-            prompt = f"""
-            You are extracting Food title and description from given text and rewriting the description and enhancing it when necessary.
-            Always give response in the user's input language.
-            Always answer in the given json format. Do not use any other keywords. Do not make up anything.
-            The description part must contain at least 5 sentences for each.
-            Json Format:
+        if submit_product_button:
+            conn = sqlite3.connect("database.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT seller_id FROM sellers WHERE user_name = ? AND password = ?", (username, password))
+            seller = cursor.fetchone()
+
+            if seller:
+                seller_id = seller[0]
+                price = price - discount  
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                prompt = f"""
+            You are extracting a food title and description from the given text, rewriting and enhancing the description when necessary.
+            Always respond in the user's input language.
+            Always answer in the given JSON format. Do not use any other keywords. Do not make up any information.
+            The description must contain at least 5 sentences.
+            JSON Format:
             {{
-            "title": "<title of the Food>",
-            "description": "<description of the Food>"
+            "title": "<title of the food>",
+            "description": "<description of the food>"
             }}
             Examples:
             Food Information: Rosehip Marmalade, keep it cold
-            Answer: {{"title": "Rosehip Marmalade", "description": "You should store this delicious rose marmalade in a cold place. It is an excellent flavor used in meals and desserts. Sold in grocery stores. It is in the form of 24 gr / 1 package. You can use this wonderful flavor in your meals and desserts!"}}
+            Answer: {{"title": "Rosehip Marmalade", "description": "Store this delicious rose marmalade in a cold place. It’s a wonderful flavor used in meals and desserts, sold in grocery stores. Packaged in 24g servings, it’s a versatile addition to both meals and desserts!"}}
             Food Information: Blackberry jam spoils in the heat
-            Answer: {{"title": "Blackberry Jam", "description": "Please store in a cold environment. It is recommended to be consumed for breakfast. It is very sweet. It is a traditional flavor and can be found in markets etc. You can also use it in your meals other than breakfast."}}
+            Answer: {{"title": "Blackberry Jam", "description": "Keep it in a cool place to preserve its sweetness. Best enjoyed at breakfast, this traditional flavor is available in markets and adds a unique touch to any meal."}}
             Now answer this:
             Food Information: {exp}
             """  
 
-            response = model.generate_content(prompt)
+                response = model.generate_content(prompt)
 
-            json_response = json.loads(response.text)
+                json_response = json.loads(response.text)
+                title = json_response["title"]
+                description = json_response["description"]       
 
-            title = json_response["title"]
-            description = json_response["description"]       
+                st.write("Title:", title)
+                st.write("Description:", description)
 
-            st.write(f"Title: ", title)
-            st.write(f"Description:", description)
+                img = Image.open(img)
+                image_path = f"product_images/{title.replace(' ', '')}.jpg"
+                img.save(image_path)
 
-            conn = sqlite3.connect("database.db")
-            cursor = conn.cursor()
-            cursor.execute("INSERT INTO sellers (identity_no, IBAN) VALUES (?, ?)", (i_no, iban))
-            seller_id = cursor.lastrowid
-            cursor.execute("INSERT INTO products (seller_id, product_name, description, price, product_image_path) VALUES (?, ?, ?, ?, ?)",
+                cursor.execute("INSERT INTO products (seller_id, product_name, description, price, product_image_path) VALUES (?, ?, ?, ?, ?)",
                            (seller_id, title, description, price, image_path))
-            conn.commit()
-            conn.close()
-            st.success("Product submitted successfully.")
-        else:
-            st.warning("There is an error, please try again.")
+                conn.commit()
+                conn.close()
 
+                st.success("Product submitted successfully.")
+            else:
+                st.warning("Username and password do not match. Please try again.")
 elif choice == "Search Product":
     with st.form("customer_searching_form"):
         st.title("Find a Product and Buy from Other Page")
@@ -214,8 +246,9 @@ elif choice == "Buy Product":
         p_id=st.number_input("ID of the product.")
         adress = st.text_input("Your Adress")
         p_i_no = st.text_input("Your Identity Number", max_chars=11)
-        CVV = st.text_input("CVV number of your card: ", max_chars=3)
+        CVV_n = st.text_input("CVV number of your card: ", max_chars=3)
         card_no = st.text_input("Your card number: ")
+        c_e_mail = st.text_input("Your E-Mail address: ")
         buy_product_button = st.form_submit_button("Buy Product")
         if p_i_no:
             if len(p_i_no) == 11 and p_i_no.isdigit():
@@ -231,7 +264,7 @@ elif choice == "Buy Product":
                 result = cursor.fetchone()
 
                 if result:
-                    cursor.execute("INSERT INTO customers (identity_no, CVV, card_no, adresss) VALUES (?, ?, ?, ?)", (p_i_no, CVV, card_no, adress))
+                    cursor.execute("INSERT INTO customers (identity_no, CVV, card_no, address, e_mail) VALUES (?, ?, ?, ?, ?)", (p_i_no, CVV_n, card_no, adress, c_e_mail))
                     cursor.execute("UPDATE products SET purchase_count=purchase_count+1 WHERE product_id=?", (p_id,))
                     conn.commit()
                     conn.close()
@@ -243,3 +276,42 @@ elif choice == "Buy Product":
                 conn.rollback()
                 conn.close()
                 st.error("There is an error, please try again.")
+
+elif choice == "See Your Products":
+    with st.form("see_your_products"):
+        sy_username = st.text_input("Your username: ")
+        sy_password = st.text_input("Your password: ", type="password")
+        see_products = st.form_submit_button("See Your Products")
+
+        if see_products:
+            conn = sqlite3.connect("database.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT seller_id FROM sellers WHERE user_name = ? AND password = ?", (sy_username, sy_password))
+            seller = cursor.fetchone()
+
+            if seller:
+                seller_id = seller[0]
+                query = """
+                    SELECT p.product_name, p.price, p.purchase_count
+                    FROM products p
+                    WHERE p.seller_id = ?
+                """
+                product_data = pd.read_sql_query(query, conn, params=(seller_id,))
+                conn.close()
+                st.write("Your Products and Sales Summary:")
+                st.dataframe(product_data)
+
+                fig, ax = plt.subplots()
+                ax.bar(product_data['product_name'], product_data['purchase_count'], color='skyblue')
+                ax.set_xlabel('Product Name')
+                ax.set_ylabel('Total Sold')
+                ax.set_title('Sales Count per Product')
+                ax.tick_params(axis='x', rotation=45)
+                st.pyplot(fig)
+                total_sales = product_data['purchase_count'].sum()
+                total_revenue = (product_data['price'] * product_data['purchase_count']).sum()
+                st.write(f"Total Products Sold: {total_sales}")
+                st.write(f"Total Revenue: ${total_revenue:.2f}")
+
+            else:
+                st.warning("Username and password do not match. Please try again.")
