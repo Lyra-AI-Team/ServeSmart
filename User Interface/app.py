@@ -14,6 +14,7 @@ import warnings
 import pandas as pd
 import plotly.express as px
 import matplotlib.pyplot as plt
+from io import BytesIO
 warnings.filterwarnings("ignore")
 
 load_dotenv()
@@ -55,7 +56,6 @@ CREATE TABLE IF NOT EXISTS customers (
 );
 """)
 
-
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS sellers (
     seller_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +67,6 @@ CREATE TABLE IF NOT EXISTS sellers (
     password TEXT NOT NULL
 );
 """)
-
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS products (
@@ -85,27 +84,32 @@ CREATE TABLE IF NOT EXISTS products (
 
 conn.commit()
 conn.close()
+
 st.set_page_config(
     page_title="ServeSmart",
     layout="centered",
     initial_sidebar_state="expanded",
     page_icon="🍽️"
 )
+
 with st.sidebar:
     st.title("Navigation")
-    choice = st.radio("Menu", ["Create Account to Sell", "Sell Product", "Search Product", "Buy Product", "See or Delete Your Products"])
+    choice = st.radio("Menu", ["Create Account to Sell", "Sell Product", "Search Product", "Buy Product", "See/Delete Your Products"])
+
 if choice == "Create Account to Sell":
     st.title("Welcome to ServeSmart :wave: Create an Account and Help Prevent Waste")
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
+
     with st.form("create_an_account"):
         s_username = st.text_input("Username: ", max_chars=20)
         s_password = st.text_input("Password: ", max_chars=20, type="password")
-        iban=st.text_input("Your IBAN to payement: ")
+        iban=st.text_input("Your IBAN to payment: ")
         s_i_no = st.text_input("Your identity number: ", max_chars=11)
         s_e_mail = st.text_input("Your E-Mail address: ")
-        business_address = st.text_input("Your business address")
+        business_address = st.text_input("Your business address:")
         create_account = st.form_submit_button("Create an Account")
+
         if create_account:
             if s_i_no and len(s_i_no) == 11 and s_i_no.isdigit():
                 try:
@@ -125,14 +129,15 @@ if choice == "Create Account to Sell":
         
 elif choice == "Sell Product":
     st.title("Welcome to ServeSmart :wave: Sell Your Products and Help Prevent Waste")
+
     with st.form("add_product_form"):
         st.write("Provide a short explanation of your product, and our AI will generate a title and description upon submission. You can also upload a product photo.")
     
         username = st.text_input("Your username: ")
         password = st.text_input("Your Password: ", type="password")
         exp = st.text_area("Please write a short explanation")
-        img = st.camera_input("Photo of your product")
-        price = st.number_input("Price of your product", min_value=0.0)
+        img = st.camera_input("Photo of your product:")
+        price = st.number_input("Price of your product:", min_value=0.0)
         st.write("Attention please! Price may change on our AI model.")
         submit_product_button = st.form_submit_button("Submit Product")
 
@@ -186,11 +191,12 @@ elif choice == "Sell Product":
                 st.success("Product submitted successfully.")
             else:
                 st.warning("Username and password do not match. Please try again.")
+
 elif choice == "Search Product":
     with st.form("customer_searching_form"):
         st.title("Find a Product and Buy from Other Page")
         st.write("Attention please: You will need product ID to buy.")
-        search_query = st.text_input("Search for a product by name")
+        search_query = st.text_input("Search for a product by name:")
         search_button = st.form_submit_button("Search")
 
         if search_button:
@@ -222,10 +228,10 @@ elif choice == "Search Product":
                 vendor_ids.append(seller_id)
 
               df = pd.DataFrame({
-        "Product Name": product_names,
-        "Purchase Count": purchase_counts,
-        "Vendor": vendor_ids
-    })
+              "Product Name": product_names,
+              "Purchase Count": purchase_counts,
+              "Vendor": vendor_ids
+              })
 
               st.subheader("Sales Summary")
               st.write(f"Total Sales Quantity: {df['Purchase Count'].sum()}")
@@ -242,23 +248,25 @@ elif choice == "Search Product":
 
 elif choice == "Buy Product":
     st.title("Hello there :wave: Here you can buy a product.")
+
     with st.form("customer_buying_form"):
         st.title("Find a Product from Other Page and Buy Here")
         st.write("Attention please: You will need product ID to buy.")
         p_id=st.number_input("ID of the product.", min_value=1, step=1)
-        adress = st.text_input("Your Adress")
-        p_i_no = st.text_input("Your Identity Number", max_chars=11)
+        adress = st.text_input("Your Adress:")
+        p_i_no = st.text_input("Your Identity Number:", max_chars=11)
         CVV_n = st.text_input("CVV number of your card: ", max_chars=3)
         card_no = st.text_input("Your card number: ")
         c_e_mail = st.text_input("Your E-Mail address: ")
         buy_product_button = st.form_submit_button("Buy Product")
+
         if p_i_no:
             if len(p_i_no) == 11 and p_i_no.isdigit():
                 st.success("Valid identity number.")
             else:
                 st.error("Please enter a valid 11-digit identity number consisting of numbers only.")
-        if buy_product_button:
 
+        if buy_product_button:
             try:
                 conn = sqlite3.connect("database.db")
                 cursor = conn.cursor()
@@ -279,9 +287,9 @@ elif choice == "Buy Product":
                 conn.close()
                 st.error("There is an error, please try again.")
 
-elif choice == "See Your Products or Delete Your Products":
+elif choice == "See/Delete Your Products":
+
     with st.form("see_your_products"):
-        st.write("See Your Products")
         sy_username = st.text_input("Your username: ")
         sy_password = st.text_input("Your password: ", type="password")
         see_products = st.form_submit_button("See Your Products")
@@ -316,37 +324,7 @@ elif choice == "See Your Products or Delete Your Products":
                 st.write(f"Total Revenue: ${total_revenue:.2f}")
             else:
                 st.warning("Username and password do not match. Please try again.")
-
-    with st.form("download_report_form"):
-        d_username = st.text_input("Your Username:")
-        d_password = st.text_input("Your Password:", type="password")
-        d_r = st.form_submit_button("Download Report")
-
-        if d_r:
-            conn = sqlite3.connect("database.db")
-            cursor = conn.cursor()
-            cursor.execute("SELECT seller_id FROM sellers WHERE user_name = ? AND password = ?", (d_username, d_password))
-            seller = cursor.fetchone()
-
-            if seller:
-                seller_id = seller[0]
-                st.success("Login successful! Preparing your products for download...")
-                query = "SELECT * FROM products WHERE seller_id = ?"
-                file = pd.read_sql_query(query, conn, params=(seller_id,))
-
-                if not file.empty:
-                    excel_data = file.to_excel(index=False, engine='openpyxl')
-                    st.download_button(
-                        label="Download Excel Report",
-                        data=excel_data,
-                        file_name="product_report.xlsx",
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    )
-                    conn.close()
-                else:
-                    st.warning("No products found for your account.")
-        else:
-            st.error("Login failed! Incorrect username or password.")
+            
     with st.form("delete_product"):
         st.write("Delete product")
         conn = sqlite3.connect("database.db")
