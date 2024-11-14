@@ -281,6 +281,7 @@ elif choice == "Buy Product":
 
 elif choice == "See Your Products or Delete Your Products":
     with st.form("see_your_products"):
+        st.write("See Your Products")
         sy_username = st.text_input("Your username: ")
         sy_password = st.text_input("Your password: ", type="password")
         see_products = st.form_submit_button("See Your Products")
