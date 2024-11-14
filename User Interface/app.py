@@ -31,11 +31,11 @@ cos = np.cos(2 * np.pi * hour / 24)
 
 prediction = price_model.predict(np.array([[sin, cos, is_holiday]]))
 
-if prediction > 3000:
+if prediction > 2500:
     discount = 20
-elif prediction > 2500:
-    discount = 10
 elif prediction > 2000:
+    discount = 10
+elif prediction > 1500:
     discount = 5
 else:
     discount = 0
