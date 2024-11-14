@@ -93,7 +93,7 @@ st.set_page_config(
 )
 with st.sidebar:
     st.title("Navigation")
-    choice = st.radio("Menu", ["Create Account to Sell", "Sell Product", "Search Product", "Buy Product", "See Your Products or Delete Your Products"])
+    choice = st.radio("Menu", ["Create Account to Sell", "Sell Product", "Search Product", "Buy Product", "See or Delete Your Products"])
 if choice == "Create Account to Sell":
     st.title("Welcome to ServeSmart :wave: Create an Account and Help Prevent Waste")
     conn = sqlite3.connect("database.db")
