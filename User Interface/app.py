@@ -94,7 +94,7 @@ st.set_page_config(
 
 with st.sidebar:
     st.title("Navigation")
-    choice = st.radio("Menu", ["Create Account to Sell", "Sell Product", "Search Product", "Buy Product", "See/Delete Your Products"])
+    choice = st.radio("Menu", ["Create Account to Sell", "Sell Product", "Search Product", "Buy Product", "See or Delete Your Products"])
 
 if choice == "Create Account to Sell":
     st.title("Welcome to ServeSmart :wave: Create an Account and Help Prevent Waste")
@@ -287,9 +287,10 @@ elif choice == "Buy Product":
                 conn.close()
                 st.error("There is an error, please try again.")
 
-elif choice == "See/Delete Your Products":
+elif choice == "See or Delete Your Products":
 
     with st.form("see_your_products"):
+        st.write("See Your Products")
         sy_username = st.text_input("Your username: ")
         sy_password = st.text_input("Your password: ", type="password")
         see_products = st.form_submit_button("See Your Products")
