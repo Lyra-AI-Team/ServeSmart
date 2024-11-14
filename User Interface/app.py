@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS products (
     purchase_count INTEGER DEFAULT 0,
     product_image_path TEXT,
     price REAL NOT NULL,
+    discount REAL NOT NULL,
     FOREIGN KEY (seller_id) REFERENCES sellers (seller_id)
 );
 """)
@@ -177,8 +178,8 @@ elif choice == "Sell Product":
                 image_path = f"product_images/{title.replace(' ', '')}.jpg"
                 img.save(image_path)
 
-                cursor.execute("INSERT INTO products (seller_id, product_name, description, price, product_image_path) VALUES (?, ?, ?, ?, ?)",
-                           (seller_id, title, description, price, image_path))
+                cursor.execute("INSERT INTO products (seller_id, product_name, description, price, product_image_path, discount) VALUES (?, ?, ?, ?, ?, ?)",
+                           (seller_id, title, description, price, image_path, discount))
                 conn.commit()
                 conn.close()
 
@@ -204,11 +205,12 @@ elif choice == "Search Product":
               vendor_ids = []
 
               for product in products:
-                product_id, seller_id, product_name, description, purchase_count, product_image_path, price = product
+                product_id, seller_id, product_name, description, purchase_count, product_image_path, price, discount = product
                 st.write(f"**Product ID**:", {product_id})
                 st.write(f"**Product Name**: {product_name}")
                 st.write(f"**Description**: {description}")
                 st.write(f"**Price**: ${price}")
+                st.write(f"**Discount**: ${discount}")
                 st.write(f"**Purchased**: {purchase_count} times")
         
                 if product_image_path and os.path.exists(product_image_path):
@@ -313,19 +315,66 @@ elif choice == "See Your Products or Delete Your Products":
                 st.write(f"Total Revenue: ${total_revenue:.2f}")
             else:
                 st.warning("Username and password do not match. Please try again.")
+
+    with st.form("download_report_form"):
+        d_username = st.text_input("Your Username:")
+        d_password = st.text_input("Your Password:", type="password")
+        d_r = st.form_submit_button("Download Report")
+
+        if d_r:
+            conn = sqlite3.connect("database.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT seller_id FROM sellers WHERE user_name = ? AND password = ?", (d_username, d_password))
+            seller = cursor.fetchone()
+
+            if seller:
+                seller_id = seller[0]
+                st.success("Login successful! Preparing your products for download...")
+                query = "SELECT * FROM products WHERE seller_id = ?"
+                file = pd.read_sql_query(query, conn, params=(seller_id,))
+
+                if not file.empty:
+                    excel_data = file.to_excel(index=False, engine='openpyxl')
+                    st.download_button(
+                        label="Download Excel Report",
+                        data=excel_data,
+                        file_name="product_report.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    )
+                    conn.close()
+                else:
+                    st.warning("No products found for your account.")
+        else:
+            st.error("Login failed! Incorrect username or password.")
     with st.form("delete_product"):
-      st.write("Delete product")
-      conn = sqlite3.connect("database.db")
-      cursor = conn.cursor()
-      p_id = st.number_input("Your product ID: ", min_value=1, step=1)
-      delete_product = st.form_submit_button("Delete")
-      if delete_product:
-          try:
-              cursor.execute("DELETE FROM products WHERE product_id = ?", (p_id,))
-              conn.commit()
-              st.success(f"{p_id} deleted.")
-          except Exception as e:
-              st.error(f"Error: {e}")
-          finally:
-              conn.close()
-            
+        st.write("Delete product")
+        conn = sqlite3.connect("database.db")
+        cursor = conn.cursor()
+        de_username = st.text_input("Your Username:")
+        de_password = st.text_input("Your Password:", type="password")
+        p_id = st.number_input("Your product ID: ", min_value=1, step=1)
+        delete_product = st.form_submit_button("Delete")
+
+        if delete_product:
+            try:
+                    cursor.execute("SELECT seller_id FROM sellers WHERE user_name = ? AND password = ?", (de_username, de_password))
+                    seller = cursor.fetchone()
+
+                    if seller:
+                        seller_id = seller[0]
+                        cursor.execute("SELECT seller_id FROM products WHERE product_id = ?", (p_id,))
+                        product = cursor.fetchone()
+
+                        if product and product[0] == seller_id:
+
+                            cursor.execute("DELETE FROM products WHERE product_id = ?", (p_id,))
+                            conn.commit()
+                            st.success(f"Product ID {p_id} deleted successfully.")
+                        else:
+                            st.warning("You are not authorized to delete this product.")
+                    else:
+                        st.error("Login failed! Incorrect username or password.")
+            except Exception as e:
+                    st.error(f"Error: {e}")
+            finally:
+                    conn.close()
