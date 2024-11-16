@@ -12,7 +12,7 @@ Sunumu [buradan]() görebilirsiniz.
 ```bash
 pip install -r requirements.txt
 ```
-## Uygulamayı çalıştırma
+## Uygulamayı Çalıştırma
 Başlamak için aşağıdaki adımları izleyin:
 Kodu çalıştırmak için Streamlit kullanmanız gerekiyor. Aşağıdaki kodu kullanarak kullanıcı arayüzü klasöründeki `app.py` dosyasını çalıştırın:
 ```bash
