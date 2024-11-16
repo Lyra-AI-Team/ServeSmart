@@ -4,7 +4,7 @@
 Bu yarışmadaki amacımız sürdürülebilir şehirler ve yeşil yarınlar için bir yapay zeka projesi geliştirmekti.
 
 # Sunum
-Sunumu [buradan]() görebilirsiniz.
+Sunumu [buradan](https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/Lyra%20AI%20-%20ServeSmart.pptx) görebilirsiniz.
 
 ## Gereksinimler
  1. **Python:** Bu kodu kullanmak için Python 3.10 veya üstünü kullanıyor olmanız gerekir.
