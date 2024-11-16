@@ -89,7 +89,7 @@ As a seller, you can see your products and analysis from this page. Here what sh
 </div>
 
 ## Text Generation
-We've added a powerful text generation feature in Sell Product tab of our application. After hitting the "Submit Product" button, we're sending an API request to Gemini (gemini-1.5-flash) and improve the title-description of the meal.
+We've added a powerful text generation feature in Sell Product tab of our application. At first, we tried to fine-tune Llama and Gemma models, and actually we did it. But there was an option called Gemini. We did the tests and decided to use gemini-1.5-flash. So we decided to use Gemini API. After hitting the "Submit Product" button, we're sending an API request to Gemini (gemini-1.5-flash) and improve the title-description of the meal.
 
 You can see the example.
 
