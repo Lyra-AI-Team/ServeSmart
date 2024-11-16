@@ -125,6 +125,9 @@ This project makes use of the following models:
 4. **Emir Kaan Özdemir - LSTM Based Time Series Model**:
    - **Source:** [GitHub](https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/User%20Interface/model.h5)
    - **License:** Apache 2.0
+5. **Gogle Deepmind - Gemini 1.5 Flash**:
+   - **Source:** [DeepMind Website](https://deepmind.google/technologies/gemini/flash/)
+   - **License:** API Used - No License Info
 
 > [!NOTE] 
 > Please ensure compliance with each model's license when using or distributing this project.
