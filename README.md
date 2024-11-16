@@ -4,7 +4,7 @@
 Our purpose in this competition to develop an AI project for sustainable cities and green tomorrows.
 
 # Presentation 
-You can view the presentation [here]().
+You can view the presentation [here](https://github.com/Lyra-AI-Team/Yarinin-Sehirleri-Hackathon/blob/main/Lyra%20AI%20-%20ServeSmart.pptx).
 
 ## Requirements
  1. **Python:** To use this code you have to be using Python 3.10 or higher.
