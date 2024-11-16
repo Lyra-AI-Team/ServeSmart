@@ -35,7 +35,7 @@ Our Streamlit application contains five tabs. The first tab is for creating acco
 </div>
 
 ## Sell Product
-The first second is for product selling (adding). The instructions to add product:
+The second one is for product selling (adding). The instructions to add product:
 1. Enter informations about your meal (AI will improve it).
 2. Take a photo of your meal.
 3. Enter the price of your meal.
