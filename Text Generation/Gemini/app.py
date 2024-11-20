@@ -1,7 +1,7 @@
 import google.generativeai as genai
 import streamlit as st
 
-genai.configure(api_key="AIzaSyD4OYgRxXdsCp_3C_cQjF1BBDjr2FU4Zuw")
+genai.configure(api_key="AIzaSyD4OYgRxXdsCp_3C_cQjF1BBDjr2FU4Zuw") # This API key is not active now.
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 user = st.text_input("Enter food information:")
