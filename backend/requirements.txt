@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+python-multipart
+Pillow
+numpy
+tensorflow
+keras
+google-generativeai 
