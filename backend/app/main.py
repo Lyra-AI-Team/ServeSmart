@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from .database import SessionLocal, engine
 from . import models, schemas, crud
@@ -24,6 +26,10 @@ app.add_middleware(
     allow_methods=["*"] ,
     allow_headers=["*"] ,
 )
+
+# We'll mount product_images directory.
+static_dir = Path(__file__).resolve().parent / "product_images"
+app.mount("/product_images", StaticFiles(directory=str(static_dir)), name="product_images")
 
 def get_db():
     db = SessionLocal()
